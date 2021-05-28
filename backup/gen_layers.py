@@ -16,13 +16,13 @@ def gen_layers(ax, FRAMES_START, FRAMES_STOP):
     smokes = {}
     im_ax = {}
 
-    backgr = imread('./images/backgr_small1.png')  #482, 187
-    # backgr = imread('./images/backgr_new1.png')  #482, 187
-    smoke_r_f = imread('./images/smokes/smoke_r_f.png')
-    wave1 = imread('./images/waves/wave1.png')  # 69, 35
-    wave2 = imread('./images/waves/wave2.png')  # 69, 35
-    ship3 = imread('./images/ships/ship3.png')  #  105, 145
-    explosion = imread('./images/expls/explosion.png')
+    backgr = imread('./images_mut/backgr_small1.png')  #482, 187
+    # backgr = imread('./images_mut/backgr_new1.png')  #482, 187
+    smoke_r_f = imread('./images_mut/smokas/smokr_3.png')
+    wave1 = imread('./images_mut/waves/wave1.png')  # 69, 35
+    wave2 = imread('./images_mut/waves/wave2.png')  # 69, 35
+    ship3 = imread('./images_mut/ships/ship_3.png')  #  105, 145
+    explosion = imread('./images_mut/expls/explosion.png')
 
     lays['backgr'] = layers.LayerAbstract()
     backgr0 = ax.imshow(backgr, zorder=0, alpha=0.9)

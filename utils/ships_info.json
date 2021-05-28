@@ -1,0 +1,10 @@
+{
+  "ship_3": {
+    "tl": [100, 2],
+    "smoka_offset": [60, 130],
+    "smoka_init_frames": [],
+    "sail_init_frames": [3],
+    "sail_offsets": [[11, 67]],
+    "sail_extent": [11, 95, 111, 67]
+  }
+}

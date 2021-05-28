@@ -1,3 +1,5 @@
+# TODO: Stray white pixels over areas where some movement is desired.
+
 import os
 import numpy as np
 from matplotlib.pyplot import imread, imsave
@@ -18,5 +20,5 @@ for folder_name in folder_names:
         array_binary = np.where(pic[:, :, 1] == 1.0, 0.0, 1)  # where alpha should be 1, and 0 otherwise
         pic[:, :, 3] = np.multiply(array_binary, np.ones_like(pic[:, :, 2]))  # alpha set to 0 in correct places
 
-        imsave('./images/' + folder_name + '/' + file_name, pic)
+        imsave('./images_mut/' + folder_name + '/' + file_name, pic)
 

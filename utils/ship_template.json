@@ -1,0 +1,13 @@
+{
+    "tl": [],
+    "firing_frames": [],
+    "explosion_offset": [],
+    "smoka_id": "",
+    "smoka_offset": [],
+    "smoka_init_frames": [],
+    "sail_init_frames": [],
+    "sails": {
+      "sail_3_0_11_66": {"offset": []},
+      "sail_3_1_53_79": {"offset": []}
+    }
+  }

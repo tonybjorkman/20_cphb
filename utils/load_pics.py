@@ -22,6 +22,7 @@ def load_pics():
     pics['waves']['wave1'] = imread('./images_mut/waves/wave1.png')  # 69, 35
     pics['waves']['wave2'] = imread('./images_mut/waves/wave2.png')  # 69, 35
     pics['ships']['ship_3'] = imread('./images_mut/ships/ship_3.png')  # 105, 145
+    pics['ships']['ship_1'] = imread('./images_mut/ships/ship_1.png')  # 105, 145
     pics['explosions']['explosion'] = imread('./images_mut/expls/explosion.png')
     pics['sails']['sail_3_0_11_66'] = imread('./images_mut/sails/sail_3_0_11_66.png')
     pics['sails']['sail_3_1_53_79'] = imread('./images_mut/sails/sail_3_1_53_79.png')

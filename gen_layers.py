@@ -11,7 +11,7 @@ NUM_WAVES_1 = 5
 NUM_WAVES_2 = 10
 # SCALING = np.linspace()
 
-def gen_layers(ax, FRAMES_START, FRAMES_STOP):
+def gen_layers(ax, FRAMES_START, FRAMES_STOP, chronicle):
 
     lays = {}  # stores all layer classes
     waves = {}
@@ -73,7 +73,7 @@ def gen_layers(ax, FRAMES_START, FRAMES_STOP):
     for i in range(5):
         id = 'smokr_' + str(i)
         smokrs[id] = layers.Smoke(id=id, zorder=zorder, tl=None, pic=pics['smokrs'][id],
-                                      scale_vector=scale_vector, s_type='r', direction='r')
+                                      scale_vector=scale_vector, s_type='r', left_right='r')
         smoke_r_f = ax.imshow(pics['smokrs']['smokr_3'], zorder=zorder, alpha=0., extent=[0, 1, 1, 0])
         im_ax[id] = smoke_r_f
 
@@ -82,17 +82,12 @@ def gen_layers(ax, FRAMES_START, FRAMES_STOP):
     for i in range(5):
         id = 'smoka_' + str(i)
         smokas[id] = layers.Smoke(id=id, zorder=zorder, tl=None, pic=pics['smokas'][id],
-                                  scale_vector=scale_vector, s_type='a', direction='r')
+                                  scale_vector=scale_vector, s_type='a', left_right='r')
         smoka = ax.imshow(pics['smokas'][id], zorder=zorder, alpha=0., extent=[0, 1, 1, 0])
         im_ax[id] = smoka
 
-    # smokas['smoke3'] = layers.Smoke(id='smoke3', zorder=zorder, tl=None, pic=pics['smoke3'],
-    #                                 scale_vector=scale_vector, s_type='a')
-    # smoke3 = ax.imshow(pics['smoke3'], zorder=zorder, alpha=0., extent=[0, 1, 1, 0])
-    # im_ax['smoke3'] = smoke3
-
     # EXPLOSION =================================
-    zorder = 6
+    zorder = 99  # 6
     lays['explosion'] = layers.LayerAbstract(id='explosion', zorder=zorder, tl=None, pic=None, scale_vector=None)
     explosion = ax.imshow(pics['explosions']['explosion'], zorder=zorder, alpha=0.9, extent=[0, 1, 1, 0])
     im_ax['explosion'] = explosion
@@ -100,15 +95,17 @@ def gen_layers(ax, FRAMES_START, FRAMES_STOP):
     # SHIPS ===================================
     with open('./utils/ships_info.json', 'r') as f:
         ships_info = json.load(f)
+    ships_info = chronicle
+
     zorder = 6
     id = 'ship_3'
     sail_pics = {}  # for a specific ship (extra nesting needed)
     for sail_id in ships_info[id]['sails']:
         sail_pics[sail_id] = pics['sails'][sail_id]
 
-    ships[id] = layers.Ship(id=id, tl=ships_info[id]['tl'], pic=pics['ships'][id], zorder=zorder,
+    ships[id] = layers.Ship(id=id, zorder=zorder, tl=ships_info[id]['tl'], pic=pics['ships'][id],
                             FRAMES_START=FRAMES_START, FRAMES_STOP=FRAMES_STOP, scale_vector=scale_vector,
-                            explosion_offset=[80, 130], sail_pics=sail_pics, ship_info=ships_info[id])
+                            sail_pics=sail_pics, ship_info=ships_info[id])
 
     ship_ax = ax.imshow(pics['ships'][id], zorder=zorder, alpha=1)
     im_ax[id] = ship_ax
@@ -117,10 +114,24 @@ def gen_layers(ax, FRAMES_START, FRAMES_STOP):
             sail_ax = ax.imshow(pics['sails'][sail_id], zorder=7, alpha=1)
             im_ax[sail_id] = sail_ax
 
-    # # GEN SAIl FOR EACH SHIP inside same iteration
-    # zorder = 7
-    # id = 'sail_3'
-    # sails[id] = layers.Sail(id=id, tl=tl, pic=pics['sails'][id], zorder=zorder, scale_vector=scale_vector)
+    # ==================
+
+    zorder = 6
+    id = 'ship_1'
+    sail_pics = {}  # for a specific ship (extra nesting needed)
+    for sail_id in ships_info[id]['sails']:
+        sail_pics[sail_id] = pics['sails'][sail_id]
+
+    ships[id] = layers.Ship(id=id, tl=ships_info[id]['tl'], pic=pics['ships'][id], zorder=zorder,
+                            FRAMES_START=FRAMES_START, FRAMES_STOP=FRAMES_STOP, scale_vector=scale_vector,
+                            sail_pics=sail_pics, ship_info=ships_info[id])
+
+    ship_ax = ax.imshow(pics['ships'][id], zorder=zorder, alpha=1)
+    im_ax[id] = ship_ax
+    for ship_id, ship in ships.items():
+        for sail_id in ship.sails:
+            sail_ax = ax.imshow(pics['sails'][sail_id], zorder=7, alpha=1)
+            im_ax[sail_id] = sail_ax
 
     return backgr_ax, im_ax, waves, lays, smokas, smokrs, ships
 

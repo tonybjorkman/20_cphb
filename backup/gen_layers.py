@@ -21,7 +21,7 @@ def gen_layers(ax, FRAMES_START, FRAMES_STOP):
     smoke_r_f = imread('./images_mut/smokas/smokr_3.png')
     wave1 = imread('./images_mut/waves/wave1.png')  # 69, 35
     wave2 = imread('./images_mut/waves/wave2.png')  # 69, 35
-    ship3 = imread('./images_mut/ships/ship_3.png')  #  105, 145
+    ship3 = imread('./images_mut/ship_infos/ship_3.png')  #  105, 145
     explosion = imread('./images_mut/expls/explosion.png')
 
     lays['backgr'] = layers.LayerAbstract()

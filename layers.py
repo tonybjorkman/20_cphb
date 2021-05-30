@@ -7,11 +7,11 @@ from utils.several import *
 EXPLOSION_WIDTH = 20
 EXPLOSION_HEIGHT = 10
 SMOKE_R_F_FRAMES = 100
-SMOKA_FRAMES = 400
+SMOKA_FRAMES = 100
 SAIL_CYCLES = 3
 
 class LayerAbstract:
-    def __init__(self, id, zorder, tl, pic, scale_vector):
+    def __init__(self, id, zorder, tl, pic, scale_vector, left_right=None):
         self.id = id
         self.zorder = zorder
         self.tl = tl
@@ -19,7 +19,7 @@ class LayerAbstract:
         self.scale_vector = scale_vector
         self.occupied = False
         self.extent = None
-        self.left_right = 'right'  # which direction the layer is moving
+        self.left_right = left_right  # which direction the layer is moving
 
     def gen_extent(self, num_frames, mov_x, mov_y):
         """
@@ -35,8 +35,8 @@ class LayerAbstract:
         for i in range(num_frames):
 
             if tl_mov[1] + self.pic.shape[0] > self.scale_vector.shape[0]:  # ONLY y
-                print("outside pic")
-                scaling_factor = 1.0
+                print("gen_extent: outside pic")
+                scaling_factor = 0.7
             else:  # obs currently it's always smaller than original pic, but should also be larger sometimes.
                 scaling_factor = self.scale_vector[tl_mov[1] + self.pic.shape[0]]  # use bottom of ship
 
@@ -52,15 +52,14 @@ class LayerAbstract:
 
 
 class Smoke(LayerAbstract):
-    def __init__(self, id, zorder, tl, pic, scale_vector, s_type, direction):
-        super().__init__(id, zorder, tl, pic, scale_vector)
+    def __init__(self, id, zorder, tl, pic, scale_vector, s_type, left_right):
+        super().__init__(id, zorder, tl, pic, scale_vector, left_right)
         self.smoke_frames = None
         self.s_type = s_type
         if s_type == 'r':
             self.smoke_frames = SMOKE_R_F_FRAMES
         elif s_type == 'a':
             self.smoke_frames = SMOKA_FRAMES
-        self.direction = direction
         self.extent = [0, self.pic.shape[1], self.pic.shape[0], 0]  # just pic extent for now
         self.extent_mov = deepcopy(self.extent)
         X = np.arange(0, self.smoke_frames)
@@ -77,17 +76,17 @@ class Smoke(LayerAbstract):
         width = self.extent[1] * scale_factor
         height = self.extent[2] * scale_factor
         if self.s_type == 'a':
-            if self.direction == 'r':
+            if self.left_right == 'r':
                 self.extent_mov = [self.tl[0], self.tl[0] + width,
                                    self.tl[1] + 2 * height / 6, self.tl[1] - 4 * height / 6]  # prevent it to go far down
-            elif self.direction == 'l':  # still use tl but rename to tr
+            elif self.left_right == 'l':  # still use tl but rename to tr
                 self.extent_mov = [self.tl[0] - width, self.tl[0], self.tl[1] + 1 * height / 6,
                                    self.tl[1] - 5 * height / 6]  # prevent it to go far down
         elif self.s_type == 'r':
-            if self.direction == 'r':
+            if self.left_right == 'r':
                 self.extent_mov = [self.tl[0], self.tl[0] + width,
                                    self.tl[1] + 1 * height / 6, self.tl[1] - 5 * height / 6]
-            elif self.direction == 'l':
+            elif self.left_right == 'l':
                 self.extent_mov = [self.tl[0] - width, self.tl[0],
                                    self.tl[1] + 2 * height / 6, self.tl[1] - 3 * height / 6]
 
@@ -116,7 +115,7 @@ class Wave(LayerAbstract):
 
 class Ship(LayerAbstract):
     def __init__(self, id, zorder, tl, pic, scale_vector,
-                 FRAMES_START, FRAMES_STOP, explosion_offset,
+                 FRAMES_START, FRAMES_STOP,
                  sail_pics, ship_info):
         """
         :param id:
@@ -131,7 +130,6 @@ class Ship(LayerAbstract):
         super().__init__(id, zorder, tl, pic, scale_vector)
         total_frames = FRAMES_STOP - FRAMES_START + 5
         self.firing_init_frames = ship_info['firing_frames']
-        # self.firing_init_frames = [5, 10]
         self.smoka_id = ship_info['smoka_id']
         self.smoka_init_frames = ship_info['smoka_init_frames']  #[12, 40, 80, 100]  # not smoke_r_f
         self.smoka_offset_ratio = gen_offset_ratio(pic, ship_info['smoka_offset'])
@@ -140,7 +138,8 @@ class Ship(LayerAbstract):
         self.extent = np.zeros(shape=(total_frames, 4), dtype=int)
 
         super().gen_extent(total_frames, mov_x=0.05, mov_y=0.03)
-        self.expl_offset_ratio = gen_offset_ratio(pic, explosion_offset)
+        self.expl_offset_ratio = gen_offset_ratio(pic, ship_info['explosion_offset'])
+        self.explosion_occupied = False  # needed to prevent removing it in animation
         self.extent_clock = 0
 
         # SAILS =====
@@ -172,8 +171,8 @@ class Ship(LayerAbstract):
         :return:
         """
         ship_extent = self.extent[self.extent_clock]
-        width_ship = (ship_extent[1] - ship_extent[0]) * (1 - random.uniform(0.0, 0.4))
-        height_ship = (ship_extent[2] - ship_extent[3]) * (1 - random.uniform(0.0, 0.1))
+        width_ship = (ship_extent[1] - ship_extent[0]) #* (1 - random.uniform(0.0, 0.4))
+        height_ship = (ship_extent[2] - ship_extent[3]) #* (1 - random.uniform(0.0, 0.1))
         smoka_tl_x = int(ship_extent[0] + width_ship * self.smoka_offset_ratio[0])
         smoka_tl_y = int(ship_extent[3] + height_ship * self.smoka_offset_ratio[1])
         return [smoka_tl_x, smoka_tl_y]

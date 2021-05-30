@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import time
+import json
 
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -11,26 +12,34 @@ FRAMES_START = 0
 FRAMES_STOP = 150
 ANIMATE_SMOKR = 0
 ANIMATE_SMOKA = 0
-ANIMATE_SAILS = 1
+ANIMATE_SAILS = 0
 
 Writer = animation.writers['ffmpeg']
 writer = Writer(fps=FPS, metadata=dict(artist='Me'), bitrate=3600)  # 20, 3600, codec="libx264", extra_args=["-preset", "veryslow","-crf","0"]
 
-# fig, ax = plt.subplots(figsize=(20, 12))
-fig, ax = plt.subplots(figsize=(10, 6))
+fig, ax = plt.subplots(figsize=(20, 12))
+# fig, ax = plt.subplots(figsize=(10, 6))
 
 # plt.axis([0, 1280, 0, 720])
 # plt.gca().invert_yaxis()
 # ax.axis('off')
 # plt.gca().set_position([0, 0, 1, 1])  # FILLS WHOLE FIG
 
+with open('./utils/chronicle.json', 'r') as f:
+    chronicle = json.load(f)
+
 backgr_ax, im_ax, waves, lays, smokas, smokrs, ships = \
-    gen_layers.gen_layers(ax, FRAMES_START, FRAMES_STOP)
+    gen_layers.gen_layers(ax, FRAMES_START, FRAMES_STOP, chronicle)
 
 plt.axis(backgr_ax.get_extent())
 smokes_occupied = []
+explosion_occupied = False
 
 def animate(i):
+
+    global explosion_occupied
+    explosion_ax = im_ax['explosion']
+
     if i % 10 == 0:
         print(i)
 
@@ -45,12 +54,11 @@ def animate(i):
         ship_ax = im_ax[ship_id]
         ship_ax.set_extent(ship.extent[ship.extent_clock])  # obs tl not updated for ship
         ship.extent_clock += 1
-        explosion_ax = im_ax['explosion']
-        # smoke_ax = im_ax['smoke_r_f']
 
         if i in ship.firing_init_frames:
             expl_extent = ship.get_extent_explosion()
             explosion_ax.set_extent(expl_extent)
+            explosion_occupied = True
 
             for smokr_id, smokr in smokrs.items():  # find smoke_r_f
                 # todo to animate chunks this prob has to be moved inside gen_layers -> JUST USE FIRING FRAME
@@ -58,9 +66,6 @@ def animate(i):
                     smokr.occupied = True
                     smokr.tl = [expl_extent[0], expl_extent[2]]
                     break
-
-        else:  # todo instead put them in separate (maybe) dict that takes care of them
-            explosion_ax.set_extent([0, 1, 1, 0])  # this one is unique tho since it only happens 1 frame (for now)
 
         if i in ship.smoka_init_frames:
             smoka_id = ship.smoka_id
@@ -85,6 +90,10 @@ def animate(i):
                     sail_ax.set_extent(ext)
                     sail_ax.set_alpha(ship.sails[sail_id].alpha_array[ship.sails[sail_id].sail_clock % len(ship.sails[sail_id].alpha_array)])  # just scalar
                     ship.sails[sail_id].sail_clock += 1
+
+    if explosion_occupied == False:  # no ship wants to use explosion
+        explosion_ax.set_extent([0, 1, 1, 0])
+    explosion_occupied = False  # for next iteration
 
     if ANIMATE_SMOKR:
         for smokr_id, smokr in smokrs.items():  # move smokas occupied inside gen_layers (or use padding and loop through all)

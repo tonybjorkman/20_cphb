@@ -6,8 +6,8 @@ from utils.several import *
 
 EXPLOSION_WIDTH = 20
 EXPLOSION_HEIGHT = 10
-SMOKE_R_F_FRAMES = 20
-SMOKA_FRAMES = 100
+SMOKE_R_F_FRAMES = 100
+SMOKA_FRAMES = 400
 SAIL_CYCLES = 3
 
 class LayerAbstract:
@@ -79,14 +79,14 @@ class Smoke(LayerAbstract):
         if self.s_type == 'a':
             if self.direction == 'r':
                 self.extent_mov = [self.tl[0], self.tl[0] + width,
-                                   self.tl[1] + 1 * height / 6, self.tl[1] - 5 * height / 6]  # prevent it to go far down
+                                   self.tl[1] + 2 * height / 6, self.tl[1] - 4 * height / 6]  # prevent it to go far down
             elif self.direction == 'l':  # still use tl but rename to tr
                 self.extent_mov = [self.tl[0] - width, self.tl[0], self.tl[1] + 1 * height / 6,
                                    self.tl[1] - 5 * height / 6]  # prevent it to go far down
         elif self.s_type == 'r':
             if self.direction == 'r':
                 self.extent_mov = [self.tl[0], self.tl[0] + width,
-                                   self.tl[1] + 2 * height / 6, self.tl[1] - 3 * height / 6]
+                                   self.tl[1] + 1 * height / 6, self.tl[1] - 5 * height / 6]
             elif self.direction == 'l':
                 self.extent_mov = [self.tl[0] - width, self.tl[0],
                                    self.tl[1] + 2 * height / 6, self.tl[1] - 3 * height / 6]
@@ -117,7 +117,7 @@ class Wave(LayerAbstract):
 class Ship(LayerAbstract):
     def __init__(self, id, zorder, tl, pic, scale_vector,
                  FRAMES_START, FRAMES_STOP, explosion_offset,
-                 sail_pics, info):
+                 sail_pics, ship_info):
         """
         :param id:
         :param tl:
@@ -130,10 +130,11 @@ class Ship(LayerAbstract):
         """
         super().__init__(id, zorder, tl, pic, scale_vector)
         total_frames = FRAMES_STOP - FRAMES_START + 5
-        self.firing_init_frames = [5, 10, 12, 15, 20, 21, 22, 23, 30, 32, 36, 40]
+        self.firing_init_frames = ship_info['firing_frames']
         # self.firing_init_frames = [5, 10]
-        self.smoka_init_frames = [12, 40, 80, 100]  # not smoke_r_f
-        self.smoka_offset_ratio = gen_offset_ratio(pic, info['smoka_offset'])
+        self.smoka_id = ship_info['smoka_id']
+        self.smoka_init_frames = ship_info['smoka_init_frames']  #[12, 40, 80, 100]  # not smoke_r_f
+        self.smoka_offset_ratio = gen_offset_ratio(pic, ship_info['smoka_offset'])
 
         self.smoke_r_f = None
         self.extent = np.zeros(shape=(total_frames, 4), dtype=int)
@@ -143,11 +144,13 @@ class Ship(LayerAbstract):
         self.extent_clock = 0
 
         # SAILS =====
-        self.sail_pic_clock = 0
-        self.sail_init_frames = info['sail_init_frames']
-        self.sail_offset_ratio = gen_offset_ratio(pic, info['sail_offsets'][0])
-        zorder = 7
-        self.sail_0 = Sail(id='sail_0', tl=tl, pic=sail_pics[0], zorder=zorder, scale_vector=scale_vector)
+        self.sails = {}
+        self.sail_init_frames = ship_info['sail_init_frames']
+        for sail_id in ship_info['sails']:
+            sail_offset_ratio = gen_offset_ratio(pic, ship_info['sails'][sail_id]['offset'])
+            zorder = 7
+            self.sails[sail_id] = Sail(id=sail_id, tl=tl, pic=sail_pics[sail_id], zorder=zorder, scale_vector=scale_vector,
+                                       sail_offset_ratio=sail_offset_ratio)
 
         hh = 5
 
@@ -175,24 +178,27 @@ class Ship(LayerAbstract):
         smoka_tl_y = int(ship_extent[3] + height_ship * self.smoka_offset_ratio[1])
         return [smoka_tl_x, smoka_tl_y]
 
-    def get_extent_sail(self):
+    def get_extent_sail(self, sail_id):
+        s = self.sails[sail_id]
         ship_extent = self.extent[self.extent_clock]
         width_ship = ship_extent[1] - ship_extent[0]
         height_ship = ship_extent[2] - ship_extent[3]
-        sail_tl_x = ship_extent[0] + width_ship * self.sail_offset_ratio[0]
-        sail_tl_y = ship_extent[3] + height_ship * self.sail_offset_ratio[1]
-        scale_factor = self.scale_vector[self.extent[self.extent_clock, 2]]
-        width = self.sail_0.extent[1] * scale_factor * self.sail_0.scale_array[self.sail_0.sail_clock % len(self.sail_0.alpha_array)]
-        height = self.sail_0.extent[2] * scale_factor
+        sail_tl_x = ship_extent[0] + width_ship * s.offset_ratio[0]
+        sail_tl_y = ship_extent[3] + height_ship * s.offset_ratio[1]
+        scale_factor = self.scale_vector[self.extent[self.extent_clock, 2]]  # only y
+        width = s.extent[1] * scale_factor * s.scale_array[s.sail_clock % len(s.alpha_array)]
+        if s.sail_clock > 999999:
+            print("warning: sail clock growing very large")
+        height = s.extent[2] * scale_factor
         return [sail_tl_x, sail_tl_x + width, sail_tl_y + height, sail_tl_y]
 
 
 class Sail(LayerAbstract):
-    def __init__(self, id, zorder, tl, pic, scale_vector):
+    def __init__(self, id, zorder, tl, pic, scale_vector, sail_offset_ratio):
         super().__init__(id, zorder, tl, pic, scale_vector)
         self.extent = [0, self.pic.shape[1], self.pic.shape[0], 0]  # just pic extent for now
         # self.sail_frames = SAIL_FRAMES
-
+        self.offset_ratio = sail_offset_ratio  # relative to ship
         X = np.arange(0, SAIL_CYCLES * np.pi, 0.1)
         self.alpha_array = np.sin(X) / 2 + 0.5
         self.scale_array = np.sin(X) / 12 + 1

@@ -21,4 +21,5 @@ for folder_name in folder_names:
         pic[:, :, 3] = np.multiply(array_binary, np.ones_like(pic[:, :, 2]))  # alpha set to 0 in correct places
 
         imsave('./images_mut/' + folder_name + '/' + file_name, pic)
+    print("done folder " + str(folder_name))
 

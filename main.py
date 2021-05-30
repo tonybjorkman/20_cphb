@@ -8,20 +8,23 @@ import gen_layers
 
 FPS = 20
 FRAMES_START = 0
-FRAMES_STOP = 100
+FRAMES_STOP = 150
+ANIMATE_SMOKR = 0
+ANIMATE_SMOKA = 0
+ANIMATE_SAILS = 1
 
 Writer = animation.writers['ffmpeg']
 writer = Writer(fps=FPS, metadata=dict(artist='Me'), bitrate=3600)  # 20, 3600, codec="libx264", extra_args=["-preset", "veryslow","-crf","0"]
 
-fig, ax = plt.subplots(figsize=(20, 12))
-# fig, ax = plt.subplots(figsize=(10, 6))
+# fig, ax = plt.subplots(figsize=(20, 12))
+fig, ax = plt.subplots(figsize=(10, 6))
 
 # plt.axis([0, 1280, 0, 720])
 # plt.gca().invert_yaxis()
 # ax.axis('off')
 # plt.gca().set_position([0, 0, 1, 1])  # FILLS WHOLE FIG
 
-backgr_ax, im_ax, waves, lays, smokes, smokes_r_f, ships = \
+backgr_ax, im_ax, waves, lays, smokas, smokrs, ships = \
     gen_layers.gen_layers(ax, FRAMES_START, FRAMES_STOP)
 
 plt.axis(backgr_ax.get_extent())
@@ -49,46 +52,59 @@ def animate(i):
             expl_extent = ship.get_extent_explosion()
             explosion_ax.set_extent(expl_extent)
 
-            for smoke_r_f_id, smoke_r_f in smokes_r_f.items():  # find smoke_r_f
+            for smokr_id, smokr in smokrs.items():  # find smoke_r_f
                 # todo to animate chunks this prob has to be moved inside gen_layers -> JUST USE FIRING FRAME
-                if smoke_r_f.occupied == False:
-                    smoke_r_f.occupied = True
-                    smoke_r_f.tl = [expl_extent[0], expl_extent[2]]
+                if smokr.occupied == False:
+                    smokr.occupied = True
+                    smokr.tl = [expl_extent[0], expl_extent[2]]
                     break
 
-        else:  # todo instead put them in separate dict that takes care of them
+        else:  # todo instead put them in separate (maybe) dict that takes care of them
             explosion_ax.set_extent([0, 1, 1, 0])  # this one is unique tho since it only happens 1 frame (for now)
 
         if i in ship.smoka_init_frames:
-            for smoke_id, smoke in smokes.items():
-                if smoke.occupied == False:
-                    smoke.occupied = True
-                    smoke.tl = ship.get_tl_smoka()
+            smoka_id = ship.smoka_id
+            # for smoke_id, smoka in smokas.items():
+            smoka = smokas[smoka_id]
+            if smoka.occupied == False:
+                smoka.occupied = True
+                smoka.tl = ship.get_tl_smoka()
 
-                # else:
-        ext = ship.get_extent_sail()
-        sail_ax = im_ax['sail_3']
-        sail_ax.set_extent(ext)
-        sail_ax.set_alpha(ship.sail_0.alpha_array[ship.sail_0.sail_clock % len(ship.sail_0.alpha_array)])  # just scalar
-        ship.sail_0.sail_clock += 1
+        if i in ship.sail_init_frames:
+            for sail_id, sail in ship.sails.items():
+                if sail.occupied == False:
+                    sail.occupied = True
+                    break  # only does it for 1 of the sail animations.
 
-    for smokr_id, smokr in smokes_r_f.items():  # move smokas occupied inside gen_layers (or use padding and loop through all)
-        if smokr.occupied == True:
-            smokr.set_extent_smoke()
-            smokr.set_clock_smoke()
+        if ANIMATE_SAILS:
+            for sail_id, sail in ship.sails.items():
+                if sail.occupied == True:
+            # sail_id = 'sail_3_0_11_66'
+                    ext = ship.get_extent_sail(sail_id=sail_id)
+                    sail_ax = im_ax[sail_id]
+                    sail_ax.set_extent(ext)
+                    sail_ax.set_alpha(ship.sails[sail_id].alpha_array[ship.sails[sail_id].sail_clock % len(ship.sails[sail_id].alpha_array)])  # just scalar
+                    ship.sails[sail_id].sail_clock += 1
 
-            smoke_ax = im_ax[smokr_id]
-            smoke_ax.set_extent(smokr.extent_mov)
-            smoke_ax.set_alpha(smokr.alpha_array[smokr.smoke_clock])
+    if ANIMATE_SMOKR:
+        for smokr_id, smokr in smokrs.items():  # move smokas occupied inside gen_layers (or use padding and loop through all)
+            if smokr.occupied == True:
+                smokr.set_extent_smoke()
+                smokr.set_clock_smoke()
 
-    for smoke_id, smoka in smokes.items():
-        if smoka.occupied == True:
-            smoka.set_extent_smoke()
-            smoka.set_clock_smoke()
+                smoke_ax = im_ax[smokr_id]
+                smoke_ax.set_extent(smokr.extent_mov)
+                smoke_ax.set_alpha(smokr.alpha_array[smokr.smoke_clock])
 
-            smoke_ax = im_ax[smoke_id]
-            smoke_ax.set_extent(smoka.extent_mov)
-            smoke_ax.set_alpha(smoka.alpha_array[smoka.smoke_clock])
+    if ANIMATE_SMOKA:
+        for smoke_id, smoka in smokas.items():
+            if smoka.occupied == True:
+                smoka.set_extent_smoke()
+                smoka.set_clock_smoke()
+
+                smoke_ax = im_ax[smoke_id]
+                smoke_ax.set_extent(smoka.extent_mov)
+                smoke_ax.set_alpha(smoka.alpha_array[smoka.smoke_clock])
 
     return im_ax,
 

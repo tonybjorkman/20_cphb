@@ -15,8 +15,8 @@ def gen_layers(ax, FRAMES_START, FRAMES_STOP):
 
     lays = {}  # stores all layer classes
     waves = {}
-    smokes = {}
-    smokes_r_f = {}
+    smokas = {}
+    smokrs = {}
     ships = {}
     im_ax = {}
 
@@ -68,21 +68,22 @@ def gen_layers(ax, FRAMES_START, FRAMES_STOP):
         wave_ax = ax.imshow(pics['waves']['wave2'], zorder=zorder, alpha=1)
         im_ax['wave_' + str(i)] = wave_ax
 
-    # SMOKES ===================================
+    # SMOKRS ====================
     zorder = 5
-    for i in range(10):
+    for i in range(5):
         id = 'smokr_' + str(i)
-        smokes_r_f[id] = layers.Smoke(id=id, zorder=zorder, tl=None, pic=pics['smokrs']['smokr_3'],
-                                      scale_vector=scale_vector, s_type='r', direction='l')
+        smokrs[id] = layers.Smoke(id=id, zorder=zorder, tl=None, pic=pics['smokrs'][id],
+                                      scale_vector=scale_vector, s_type='r', direction='r')
         smoke_r_f = ax.imshow(pics['smokrs']['smokr_3'], zorder=zorder, alpha=0., extent=[0, 1, 1, 0])
         im_ax[id] = smoke_r_f
 
+    # SMOKAS ========
     zorder = 4
     for i in range(5):
         id = 'smoka_' + str(i)
-        smokes[id] = layers.Smoke(id=id, zorder=zorder, tl=None, pic=pics['smokas']['smoka_3'],
+        smokas[id] = layers.Smoke(id=id, zorder=zorder, tl=None, pic=pics['smokas'][id],
                                   scale_vector=scale_vector, s_type='a', direction='r')
-        smoka = ax.imshow(pics['smokas']['smoka_3'], zorder=zorder, alpha=0., extent=[0, 1, 1, 0])
+        smoka = ax.imshow(pics['smokas'][id], zorder=zorder, alpha=0., extent=[0, 1, 1, 0])
         im_ax[id] = smoka
 
     # smokas['smoke3'] = layers.Smoke(id='smoke3', zorder=zorder, tl=None, pic=pics['smoke3'],
@@ -91,7 +92,7 @@ def gen_layers(ax, FRAMES_START, FRAMES_STOP):
     # im_ax['smoke3'] = smoke3
 
     # EXPLOSION =================================
-    zorder = 5
+    zorder = 6
     lays['explosion'] = layers.LayerAbstract(id='explosion', zorder=zorder, tl=None, pic=None, scale_vector=None)
     explosion = ax.imshow(pics['explosions']['explosion'], zorder=zorder, alpha=0.9, extent=[0, 1, 1, 0])
     im_ax['explosion'] = explosion
@@ -101,20 +102,25 @@ def gen_layers(ax, FRAMES_START, FRAMES_STOP):
         ships_info = json.load(f)
     zorder = 6
     id = 'ship_3'
-    sail_pics = [pics['sails']['sail_3']]
+    sail_pics = {}  # for a specific ship (extra nesting needed)
+    for sail_id in ships_info[id]['sails']:
+        sail_pics[sail_id] = pics['sails'][sail_id]
+
     ships[id] = layers.Ship(id=id, tl=ships_info[id]['tl'], pic=pics['ships'][id], zorder=zorder,
                             FRAMES_START=FRAMES_START, FRAMES_STOP=FRAMES_STOP, scale_vector=scale_vector,
-                            explosion_offset=[80, 130], sail_pics=sail_pics, info=ships_info[id])
+                            explosion_offset=[80, 130], sail_pics=sail_pics, ship_info=ships_info[id])
 
     ship_ax = ax.imshow(pics['ships'][id], zorder=zorder, alpha=1)
     im_ax[id] = ship_ax
-    sail_ax = ax.imshow(pics['sails']['sail_3'], zorder=7, alpha=1)
-    im_ax['sail_3'] = sail_ax
+    for ship_id, ship in ships.items():
+        for sail_id in ship.sails:
+            sail_ax = ax.imshow(pics['sails'][sail_id], zorder=7, alpha=1)
+            im_ax[sail_id] = sail_ax
 
     # # GEN SAIl FOR EACH SHIP inside same iteration
     # zorder = 7
     # id = 'sail_3'
     # sails[id] = layers.Sail(id=id, tl=tl, pic=pics['sails'][id], zorder=zorder, scale_vector=scale_vector)
 
-    return backgr_ax, im_ax, waves, lays, smokes, smokes_r_f, ships
+    return backgr_ax, im_ax, waves, lays, smokas, smokrs, ships
 

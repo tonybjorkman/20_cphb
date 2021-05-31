@@ -1,13 +1,14 @@
 {
   "tl": [200, 0],
   "firing_frames": [3],
-  "explosion_offset": [102, 165],
+  "explosion_offset": [102, 140],
   "smoka_id": "smoka_1",
-  "smoka_offset": [60, 150],
+  "smoka_offset": [60, 140],
   "smoka_init_frames": [12],
-  "sail_init_frames": [],
+  "sail_init_frames": [5, 8, 10],
   "sails": {
-    "sail_3_0_11_66": {"offset": [11, 67]},
-    "sail_3_1_53_79": {"offset": [53, 79]}
+    "sail_1_0": {"offset": [25, 74]},
+    "sail_1_1": {"offset": [57, 83]},
+    "sail_1_f": {"offset": [96, 103]}
   }
 }

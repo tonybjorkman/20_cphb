@@ -5,7 +5,7 @@ def generate_scaling(backgr):
 
     y_pixels = backgr.shape[0]
 
-    SCALE_MAX = 0.6
+    SCALE_MAX = 0.8
     SCALE_MIN = 0.6
 
     scale_vector = np.linspace(SCALE_MIN, SCALE_MAX, y_pixels)

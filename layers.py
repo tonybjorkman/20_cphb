@@ -3,12 +3,13 @@ random.seed(2)
 from copy import deepcopy
 import numpy as np
 from utils.several import *
+import PARAMS
 
-EXPLOSION_WIDTH = 20
-EXPLOSION_HEIGHT = 10
-SMOKE_R_F_FRAMES = 100
-SMOKA_FRAMES = 100
-SAIL_CYCLES = 3
+EXPLOSION_WIDTH = PARAMS.EXPLOSION_WIDTH
+EXPLOSION_HEIGHT = PARAMS.EXPLOSION_HEIGHT
+SMOKE_R_F_FRAMES = PARAMS.SMOKE_R_F_FRAMES
+SMOKA_FRAMES = PARAMS.SMOKA_FRAMES
+SAIL_CYCLES = PARAMS.SAIL_CYCLES
 
 class LayerAbstract:
     def __init__(self, id, zorder, tl, pic, scale_vector, left_right=None):

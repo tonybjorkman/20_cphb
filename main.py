@@ -6,19 +6,24 @@ import json
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import gen_layers
+import chronicler
+import PARAMS
 
 FPS = 20
-FRAMES_START = 0
-FRAMES_STOP = 150
+FRAMES_START = PARAMS.FRAMES_START
+FRAMES_STOP = PARAMS.FRAMES_STOP
 ANIMATE_SMOKR = 0
-ANIMATE_SMOKA = 0
+ANIMATE_SMOKA = 1
 ANIMATE_SAILS = 0
+ANIMATE_EXPLOSIONS = 1
+
+chronicler.Chronicler()
 
 Writer = animation.writers['ffmpeg']
 writer = Writer(fps=FPS, metadata=dict(artist='Me'), bitrate=3600)  # 20, 3600, codec="libx264", extra_args=["-preset", "veryslow","-crf","0"]
 
-fig, ax = plt.subplots(figsize=(20, 12))
-# fig, ax = plt.subplots(figsize=(10, 6))
+# fig, ax = plt.subplots(figsize=(20, 12))
+fig, ax = plt.subplots(figsize=(10, 6))
 
 # plt.axis([0, 1280, 0, 720])
 # plt.gca().invert_yaxis()
@@ -28,17 +33,17 @@ fig, ax = plt.subplots(figsize=(20, 12))
 with open('./utils/chronicle.json', 'r') as f:
     chronicle = json.load(f)
 
-backgr_ax, im_ax, waves, lays, smokas, smokrs, ships = \
+backgr_ax, im_ax, waves, lays, smokas, smokrs, explosions, ships = \
     gen_layers.gen_layers(ax, FRAMES_START, FRAMES_STOP, chronicle)
 
 plt.axis(backgr_ax.get_extent())
 smokes_occupied = []
-explosion_occupied = False
+# explosion_occupied = False
 
 def animate(i):
 
-    global explosion_occupied
-    explosion_ax = im_ax['explosion']
+    # global explosion_occupied
+
 
     if i % 10 == 0:
         print(i)
@@ -56,21 +61,21 @@ def animate(i):
         ship.extent_clock += 1
 
         if i in ship.firing_init_frames:
-            expl_extent = ship.get_extent_explosion()
-            explosion_ax.set_extent(expl_extent)
-            explosion_occupied = True
+            # expl_extent = None  # must be populated below
+            for expl_id, expl in explosions.items():
+                # if expl.occupied == False:
+                expl.extent = ship.get_extent_explosion()
+                expl.occupied = True
 
             for smokr_id, smokr in smokrs.items():  # find smoke_r_f
-                # todo to animate chunks this prob has to be moved inside gen_layers -> JUST USE FIRING FRAME
                 if smokr.occupied == False:
                     smokr.occupied = True
+                    expl_extent = ship.get_extent_explosion()
                     smokr.tl = [expl_extent[0], expl_extent[2]]
                     break
 
         if i in ship.smoka_init_frames:
-            smoka_id = ship.smoka_id
-            # for smoke_id, smoka in smokas.items():
-            smoka = smokas[smoka_id]
+            smoka = smokas[ship.smoka_id]
             if smoka.occupied == False:
                 smoka.occupied = True
                 smoka.tl = ship.get_tl_smoka()
@@ -84,16 +89,24 @@ def animate(i):
         if ANIMATE_SAILS:
             for sail_id, sail in ship.sails.items():
                 if sail.occupied == True:
-            # sail_id = 'sail_3_0_11_66'
                     ext = ship.get_extent_sail(sail_id=sail_id)
                     sail_ax = im_ax[sail_id]
                     sail_ax.set_extent(ext)
                     sail_ax.set_alpha(ship.sails[sail_id].alpha_array[ship.sails[sail_id].sail_clock % len(ship.sails[sail_id].alpha_array)])  # just scalar
-                    ship.sails[sail_id].sail_clock += 1
+                    ship.sails[sail_id].sail_clock += 1  # todo change to sail.sail_clock which stops
 
-    if explosion_occupied == False:  # no ship wants to use explosion
-        explosion_ax.set_extent([0, 1, 1, 0])
-    explosion_occupied = False  # for next iteration
+    # if explosion_occupied == False:  # no ship wants to use explosion
+    #     explosion_ax.set_extent([0, 1, 1, 0])
+    # explosion_occupied = False  # for next iteration
+
+    if ANIMATE_EXPLOSIONS:
+        for expl_id, expl in explosions.items():
+            expl_ax = im_ax[expl_id]
+            if expl.occupied == True:
+                expl_ax.set_extent(expl.extent)
+                expl.occupied = False
+            else:
+                expl_ax.set_extent([0, 1, 1, 0])
 
     if ANIMATE_SMOKR:
         for smokr_id, smokr in smokrs.items():  # move smokas occupied inside gen_layers (or use padding and loop through all)
@@ -125,7 +138,7 @@ WRITE = 0  # change IMMEDIATELY after set
 start_t = time.time()
 ani = animation.FuncAnimation(fig, animate, frames=range(FRAMES_START, FRAMES_STOP), interval=1, repeat=False)  # interval only affects live ani
 
-if WRITE == 0:
+if WRITE == 1:
     plt.show()
 else:
     ani.save('./vid_81.mp4', writer=writer)

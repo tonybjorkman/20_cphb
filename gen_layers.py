@@ -6,9 +6,8 @@ import json
 import numpy as np
 from utils.several import generate_scaling
 from utils.load_pics import load_pics
+import PARAMS
 
-NUM_WAVES_1 = 5
-NUM_WAVES_2 = 10
 # SCALING = np.linspace()
 
 def gen_layers(ax, FRAMES_START, FRAMES_STOP, chronicle):
@@ -19,6 +18,7 @@ def gen_layers(ax, FRAMES_START, FRAMES_STOP, chronicle):
     smokrs = {}
     ships = {}
     im_ax = {}
+    explosions = {}
 
     pics = load_pics()
 
@@ -37,35 +37,37 @@ def gen_layers(ax, FRAMES_START, FRAMES_STOP, chronicle):
 
     # WAVES =================================
     zorder = 3
-    for i in range(0, NUM_WAVES_1):
+    for i in range(0, PARAMS.NUM_WAVES_1):
         id = 'wave_' + str(i)
         found_coords = False
         while found_coords == False:
-            try:
-                x = random.randint(pics['waves']['wave1'].shape[1], pics['backgr'].shape[1] - pics['waves']['wave1'].shape[1] * 1)
-                y = random.randint(int(pics['backgr'].shape[0] * 1/10), pics['backgr'].shape[0] - pics['waves']['wave1'].shape[0] * 2)
-                found_coords = True
-            except:
-                print("failed to find coords1")
-        waves['wave_' + str(i)] = layers.Wave(id=id, tl=[x, y], pic=pics['waves']['wave1'], zorder=zorder,
+            if PARAMS.MAP_SIZE == 'small':
+                try:
+                    x = random.randint(0, pics['backgr'].shape[1] - pics['waves']['wave1s'].shape[1] * 1)
+                    y = random.randint(int(pics['backgr'].shape[0] * 1/10), pics['backgr'].shape[0] - pics['waves']['wave1s'].shape[0] * 2)
+                    found_coords = True
+                except:
+                    print("failed to find coords1")
+        waves['wave_' + str(i)] = layers.Wave(id=id, tl=[x, y], pic=pics['waves']['wave1s'], zorder=zorder,
                                               FRAMES_START=FRAMES_START, FRAMES_STOP=FRAMES_STOP, scale_vector=scale_vector)
-        wave_ax = ax.imshow(pics['waves']['wave1'], zorder=zorder, alpha=1)
+        wave_ax = ax.imshow(pics['waves']['wave1s'], zorder=zorder, alpha=1)
         im_ax['wave_' + str(i)] = wave_ax
 
     zorder = 3
-    for i in range(len(waves), len(waves) + NUM_WAVES_2 - 1):
+    for i in range(len(waves), len(waves) + PARAMS.NUM_WAVES_2 - 1):
         id = 'wave_' + str(i)
         found_coords = False
         while found_coords == False:
-            try:
-                x = random.randint(0, pics['backgr'].shape[1] - pics['waves']['wave2'].shape[1])
-                y = random.randint(int(pics['backgr'].shape[0] * 1 / 6), pics['backgr'].shape[0] - pics['waves']['wave2'].shape[0] * 1)
-                found_coords = True
-            except:
-                print("failed to find coords2")
-        waves['wave_' + str(i)] = layers.Wave(id=id, tl=[x, y], pic=pics['waves']['wave2'], zorder=zorder,
+            if PARAMS.MAP_SIZE == 'small':
+                try:
+                    x = random.randint(0, pics['backgr'].shape[1] - pics['waves']['wave2s'].shape[1])
+                    y = random.randint(int(pics['backgr'].shape[0] * 1 / 6), pics['backgr'].shape[0] - pics['waves']['wave2s'].shape[0] * 2)
+                    found_coords = True
+                except:
+                    print("failed to find coords2")
+        waves['wave_' + str(i)] = layers.Wave(id=id, tl=[x, y], pic=pics['waves']['wave2s'], zorder=zorder,
                                               FRAMES_START=FRAMES_START, FRAMES_STOP=FRAMES_STOP, scale_vector=scale_vector)
-        wave_ax = ax.imshow(pics['waves']['wave2'], zorder=zorder, alpha=1)
+        wave_ax = ax.imshow(pics['waves']['wave2s'], zorder=zorder, alpha=1)
         im_ax['wave_' + str(i)] = wave_ax
 
     # SMOKRS ====================
@@ -86,11 +88,13 @@ def gen_layers(ax, FRAMES_START, FRAMES_STOP, chronicle):
         smoka = ax.imshow(pics['smokas'][id], zorder=zorder, alpha=0., extent=[0, 1, 1, 0])
         im_ax[id] = smoka
 
-    # EXPLOSION =================================
+    # EXPLOSIONS =================================
     zorder = 99  # 6
-    lays['explosion'] = layers.LayerAbstract(id='explosion', zorder=zorder, tl=None, pic=None, scale_vector=None)
-    explosion = ax.imshow(pics['explosions']['explosion'], zorder=zorder, alpha=0.9, extent=[0, 1, 1, 0])
-    im_ax['explosion'] = explosion
+    id = 'explosion_0'
+    # lays['explosion'] = layers.LayerAbstract(id='explosion', zorder=zorder, tl=None, pic=None, scale_vector=None)  # pending del
+    explosions[id] = layers.LayerAbstract(id='explosion_0', zorder=zorder, tl=None, pic=None, scale_vector=None)
+    im_ax['explosion_0'] = ax.imshow(pics['explosions']['explosion_0'], zorder=zorder, alpha=0.9, extent=[0, 1, 1, 0])
+    # im_ax['explosion'] = ax.imshow(pics['explosions']['explosion'], zorder=zorder, alpha=0.9, extent=[0, 1, 1, 0])
 
     # SHIPS ===================================
     with open('./utils/ships_info.json', 'r') as f:
@@ -111,7 +115,7 @@ def gen_layers(ax, FRAMES_START, FRAMES_STOP, chronicle):
     im_ax[id] = ship_ax
     for ship_id, ship in ships.items():
         for sail_id in ship.sails:
-            sail_ax = ax.imshow(pics['sails'][sail_id], zorder=7, alpha=1)
+            sail_ax = ax.imshow(pics['sails'][sail_id], zorder=7, alpha=0)
             im_ax[sail_id] = sail_ax
 
     # ==================
@@ -130,8 +134,8 @@ def gen_layers(ax, FRAMES_START, FRAMES_STOP, chronicle):
     im_ax[id] = ship_ax
     for ship_id, ship in ships.items():
         for sail_id in ship.sails:
-            sail_ax = ax.imshow(pics['sails'][sail_id], zorder=7, alpha=1)
+            sail_ax = ax.imshow(pics['sails'][sail_id], zorder=7, alpha=0)
             im_ax[sail_id] = sail_ax
 
-    return backgr_ax, im_ax, waves, lays, smokas, smokrs, ships
+    return backgr_ax, im_ax, waves, lays, smokas, smokrs, explosions, ships
 

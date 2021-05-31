@@ -38,8 +38,6 @@ class Chronicler:
                     elif ship_id == 'ship_3':
                         ship['firing_frames'].append(frame)
 
-
-
     def export(self):
 
         if OVERWRITE:

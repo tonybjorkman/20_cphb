@@ -52,6 +52,18 @@ if __name__ == "__main__":
     _ch = Chronicler()
 
 
-
-
+# BACUP from plotting:
+# CYCLES_SHIPS = 4
+# NUM = 150
+# cycles_currently = NUM / (2 * np.pi)
+# d = cycles_currently / CYCLES_SHIPS  # divisor_to_achieve_cycles
+# # X = np.arange(0, NUM)
+# X = np.linspace(0, np.pi, 10)
+# # Y = np.array([sigmoid(x, grad_magn_inv=-NUM/25, x_shift=-10, y_magn=1, y_shift=0) for x in X])  # alpha
+#
+#
+# # X = np.arange(0, (2 * CYCLES) * np.pi, 0.1)
+# X = np.arange(0, NUM, 2)
+# Y = (np.tan(X/d )* 0.005 + 0.1 * np.sin(X/d) + 0.1 * np.log(X + 10)) + 0.3
+# Y = np.clip(Y, 0.0, 1.0)
 

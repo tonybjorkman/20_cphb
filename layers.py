@@ -206,7 +206,10 @@ class Sail(LayerAbstract):
         # self.extent_mov = deepcopy(self.extent)
 
 
+class Splash(LayerAbstract):
 
+    def __init__(self, id, zorder, tl, pic, scale_vector):
+        super().__init__(id, zorder, tl, pic, scale_vector)
 
 
 

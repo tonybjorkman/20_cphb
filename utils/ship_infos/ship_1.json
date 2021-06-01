@@ -1,6 +1,7 @@
 {
   "tl": [200, 0],
-  "firing_frames": [3],
+  "firing_frames": [],
+  "splash_init_frames": [],
   "explosion_offset": [102, 140],
   "smoka_id": "smoka_1",
   "smoka_offset": [60, 140],

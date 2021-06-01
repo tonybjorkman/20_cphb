@@ -4,6 +4,7 @@ from copy import deepcopy
 import numpy as np
 from utils.several import *
 import PARAMS
+from scipy.stats import chi2
 
 EXPLOSION_WIDTH = PARAMS.EXPLOSION_WIDTH
 EXPLOSION_HEIGHT = PARAMS.EXPLOSION_HEIGHT
@@ -19,7 +20,8 @@ class LayerAbstract:
         self.pic = pic
         self.scale_vector = scale_vector
         self.occupied = False
-        self.extent = None
+        if pic is not None:
+            self.extent = [0, self.pic.shape[1], self.pic.shape[0], 0]
         self.left_right = left_right  # which direction the layer is moving
 
     def gen_extent(self, num_frames, mov_x, mov_y):
@@ -61,7 +63,6 @@ class Smoke(LayerAbstract):
             self.smoke_frames = SMOKE_R_F_FRAMES
         elif s_type == 'a':
             self.smoke_frames = SMOKA_FRAMES
-        self.extent = [0, self.pic.shape[1], self.pic.shape[0], 0]  # just pic extent for now
         self.extent_mov = deepcopy(self.extent)
         X = np.arange(0, self.smoke_frames)
         self.alpha_array = np.array([sigmoid(x, grad_magn_inv=-self.smoke_frames/25, x_shift=-10,
@@ -106,12 +107,20 @@ class Wave(LayerAbstract):
         super().__init__(id, zorder, tl, pic, scale_vector)
 
         # ONE WAVE CYCLE
-        X = np.arange(0, np.pi, 0.1)
-        self.alpha_array = np.sin(2 * X) / 4 + 0.3
+        cycles_currently = PARAMS.WAVES_STEPS_P_CYCLE / (2 * np.pi)
+        X = np.arange(0, PARAMS.WAVES_STEPS_P_CYCLE)
+        self.alpha_array = np.sin(X / cycles_currently) / 4 + 0.3
         self.wave_clock = random.randint(0, len(X) - 1)
 
         self.extent = np.zeros(shape=(len(X), 4), dtype=int)
-        super().gen_extent(len(X), mov_x=0.1, mov_y=0.1)
+        super().gen_extent(len(X), mov_x=0.05, mov_y=0.04)
+
+    def set_wave_clock(self):
+
+        if self.wave_clock == len(self.alpha_array) - 1:
+            self.wave_clock = 0
+        else:
+            self.wave_clock += 1
 
 
 class Ship(LayerAbstract):
@@ -196,7 +205,6 @@ class Ship(LayerAbstract):
 class Sail(LayerAbstract):
     def __init__(self, id, zorder, tl, pic, scale_vector, sail_offset_ratio):
         super().__init__(id, zorder, tl, pic, scale_vector)
-        self.extent = [0, self.pic.shape[1], self.pic.shape[0], 0]  # just pic extent for now
         # self.sail_frames = SAIL_FRAMES
         self.offset_ratio = sail_offset_ratio  # relative to ship
         X = np.arange(0, SAIL_CYCLES * np.pi, 0.1)
@@ -210,8 +218,27 @@ class Splash(LayerAbstract):
 
     def __init__(self, id, zorder, tl, pic, scale_vector):
         super().__init__(id, zorder, tl, pic, scale_vector)
+        self.extent_mov = deepcopy(self.extent)
+        X = np.arange(0, PARAMS.SPLASH_STEPS_P_CYCLE)
+        self.alpha_array = np.array([sigmoid(x, grad_magn_inv=-PARAMS.SPLASH_STEPS_P_CYCLE / 25, x_shift=-10,
+                                             y_magn=1, y_shift=0) for x in X])
 
+        self.scale_vector_s = chi2.pdf(X / 2, PARAMS.SPLASH_STEPS_P_CYCLE // 10) * 6  # obs starts at fire frame
+        # self.scale_vector_s = np.array([np.log(x) / np.log(self.smoke_frames) for x in X])
+        self.spl_clock = 0
 
+    def set_extent_spl(self):
+        scale_factor = self.scale_vector_s[self.spl_clock] * self.scale_vector[int(self.tl[1])]
+        width = self.extent[1] * scale_factor
+        height = self.extent[2] * scale_factor
+        self.extent_mov = [self.tl[0] - width/2, self.tl[0] + width/2, self.tl[1],
+                           self.tl[1] - height]  # prevent it to go far down
 
-
+    def set_clock_spl(self):
+        if self.spl_clock >= len(self.alpha_array) - 1:
+            self.occupied = False
+            self.extent_mov = deepcopy(self.extent)
+            self.spl_clock = 0
+        else:
+            self.spl_clock += 1
 

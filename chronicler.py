@@ -35,8 +35,10 @@ class Chronicler:
                 if frame > 1 and _r < 0.2:  # firing prob
                     if _r < 0.1 and ship_id == 'ship_1':
                         ship['firing_frames'].append(frame)
+                        ship['splash_init_frames'].append(frame)
                     elif ship_id == 'ship_3':
                         ship['firing_frames'].append(frame)
+                        ship['splash_init_frames'].append(frame)
 
     def export(self):
 

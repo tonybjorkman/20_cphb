@@ -12,13 +12,14 @@ import PARAMS
 FPS = 20
 FRAMES_START = PARAMS.FRAMES_START
 FRAMES_STOP = PARAMS.FRAMES_STOP
-ANIMATE_WAVES = 0
+ANIMATE_WAVES = 1
 ANIMATE_SMOKR = 0
 ANIMATE_SMOKA = 0
-ANIMATE_SAILS = 0
+ANIMATE_SAILS = 1
 ANIMATE_EXPLOSIONS = 1
+ANIMATE_SPL = 1
 
-# chronicler.Chronicler()
+chronicler.Chronicler()
 
 Writer = animation.writers['ffmpeg']
 writer = Writer(fps=FPS, metadata=dict(artist='Me'), bitrate=3600)  # 20, 3600, codec="libx264", extra_args=["-preset", "veryslow","-crf","0"]
@@ -49,12 +50,15 @@ def animate(i):
     if i % 10 == 0:
         print(i)
 
+    # WAVES ===============
     if ANIMATE_WAVES:
         for wave_id, wave in waves.items():
             wave_ax = im_ax[wave_id]
             wave_ax.set_alpha(wave.alpha_array[wave.wave_clock % len(wave.alpha_array)])
             wave_ax.set_extent(wave.extent[wave.wave_clock % len(wave.alpha_array)])
-            wave.wave_clock += 1
+            wave.set_wave_clock()
+
+    # SPA
 
     # SHIP  ======
     for ship_id, ship in ships.items():
@@ -84,6 +88,14 @@ def animate(i):
                     smokr.tl = [expl_extent[0], expl_extent[2]]
                     break
 
+            for spl_id, spl in spls.items():
+                if spl.occupied == False:
+                    spl.occupied = True
+                    expl_extent = ship.get_extent_explosion()
+                    spl.tl = [expl_extent[0] + 20 , expl_extent[2]]
+                    # spl.tl = [20, 100]
+                    break
+
         if i in ship.smoka_init_frames:
             smoka = smokas[ship.smoka_id]
             if smoka.occupied == False:
@@ -96,7 +108,7 @@ def animate(i):
                     sail.occupied = True
                     break  # only does it for 1 of the sail animations.
 
-        if ANIMATE_SAILS:
+        if ANIMATE_SAILS:  # owned by ship
             for sail_id, sail in ship.sails.items():
                 if sail.occupied == True:
                     ext = ship.get_extent_sail(sail_id=sail_id)
@@ -104,10 +116,6 @@ def animate(i):
                     sail_ax.set_extent(ext)
                     sail_ax.set_alpha(ship.sails[sail_id].alpha_array[ship.sails[sail_id].sail_clock % len(ship.sails[sail_id].alpha_array)])  # just scalar
                     ship.sails[sail_id].sail_clock += 1  # todo change to sail.sail_clock which stops
-
-    # if explosion_occupied == False:  # no ship wants to use explosion
-    #     explosion_ax.set_extent([0, 1, 1, 0])
-    # explosion_occupied = False  # for next iteration
 
     if ANIMATE_EXPLOSIONS:
         for expl_id, expl in expls.items():
@@ -138,6 +146,15 @@ def animate(i):
                 smoke_ax.set_extent(smoka.extent_mov)
                 smoke_ax.set_alpha(smoka.alpha_array[smoka.smoke_clock])
 
+    if ANIMATE_SPL:
+        for spl_id, spl in spls.items():
+            if spl.occupied == True:
+                spl.set_extent_spl()
+                spl.set_clock_spl()
+
+                spl_ax = im_ax[spl_id]
+                spl_ax.set_extent(spl.extent_mov)
+                spl_ax.set_alpha(spl.alpha_array[spl.spl_clock])
     return im_ax,
 
 sec_vid = ((FRAMES_STOP - FRAMES_START) / FPS)
@@ -148,7 +165,7 @@ WRITE = 0  # change IMMEDIATELY after set
 start_t = time.time()
 ani = animation.FuncAnimation(fig, animate, frames=range(FRAMES_START, FRAMES_STOP), interval=1, repeat=False)  # interval only affects live ani
 
-if WRITE == 0:
+if WRITE == 1:
     plt.show()
 else:
     ani.save('./vid_81.mp4', writer=writer)

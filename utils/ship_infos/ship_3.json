@@ -1,14 +1,16 @@
 {
-    "tl": [100, 0],
-    "firing_frames": [3],
-    "explosion_offset": [80, 140],
-    "smoka_id": "smoka_3",
-    "smoka_offset": [50, 130],
-    "smoka_init_frames": [40],
-    "sail_init_frames": [3, 5, 30, 35],
-    "sails": {
-      "sail_3_0_20_68": {"offset": [20, 68]},
-      "sail_3_1_53_79": {"offset": [53, 79]},
-      "sail_3_f": {"offset": [72, 76]}
-    }
+  "tl": [100, 0],
+  "firing_frames": [],
+  "splash_init_frames": [],
+  "spl_boats": 2,
+  "explosion_offset": [80, 140],
+  "smoka_id": "smoka_3",
+  "smoka_offset": [50, 130],
+  "smoka_init_frames": [40],
+  "sail_init_frames": [3, 5, 30, 35],
+  "sails": {
+    "sail_3_0_20_68": {"offset": [20, 68]},
+    "sail_3_1_53_79": {"offset": [53, 79]},
+    "sail_3_f": {"offset": [72, 76]}
   }
+}

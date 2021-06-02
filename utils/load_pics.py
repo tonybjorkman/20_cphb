@@ -11,22 +11,21 @@ def load_pics():
     pics['smokas'] = {}
     pics['smokrs'] = {}
     pics['expls'] = {}
-    pics['backgr'] = imread('./images_mut/backgr_small1.png')  # 482, 187
-    # pics['backgr'] = imread('./images_mut/backgr_new1.png')  # 482, 187
-
     if PARAMS.MAP_SIZE == 'small':
-        pics['waves']['wave1s'] = imread('./images_mut/waves/wave1s.png')  # 69, 35
-        pics['waves']['wave2s'] = imread('./images_mut/waves/wave2s.png')  # 69, 35
+        pics['backgr'] = imread('./images_mut/backgr_small1.png')  # 482, 187
     else:
-        PATH = './images_mut/waves/'
-        _, _, file_names = os.walk(PATH).__next__()
+        pics['backgr'] = imread('./images_mut/backgr_new1.png')  # 482, 187
+    PATH = './images_mut/waves/'
+    _, _, file_names = os.walk(PATH).__next__()
+    for i in range(PARAMS.NUM_WAVES):
         for file_name in file_names:
-            pics['waves'][file_name[:-4]] = imread(PATH + file_name)  # without .png
+            pics['waves'][file_name[:-4] + '_' + str(i)] = imread(PATH + file_name)  # without .png
 
     PATH = './images_mut/spls/'
     _, _, file_names = os.walk(PATH).__next__()
-    for file_name in file_names:
-        pics['spls'][file_name[:-4]] = imread(PATH + file_name)  # without .png
+    for i in range(PARAMS.NUM_SPLS):
+        for file_name in file_names:
+            pics['spls'][file_name[:-4] + '_' + str(i)] = imread(PATH + file_name)  # without .png
 
     PATH = './images_mut/smokrs/'
     _, _, file_names = os.walk(PATH).__next__()

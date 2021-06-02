@@ -15,29 +15,29 @@ def sigmoid(x, grad_magn_inv=None, x_shift=None, y_magn=None, y_shift=None):
     """
     return (1 / (math.exp(-x / grad_magn_inv + x_shift) + y_magn)) + y_shift  # finfin
 
-CYCLES_SHIPS = 1
-NUM = 50
+CYCLES_SHIPS = 15  # firing cycles
+NUM = 1200
 cycles_currently = NUM / (2 * np.pi)
 d = cycles_currently / CYCLES_SHIPS  # divisor_to_achieve_cycles
 X = np.arange(0, NUM)
 # X = np.linspace(0, np.pi, 10)
 # Y = np.array([sigmoid(x, grad_magn_inv=-NUM/25, x_shift=-10, y_magn=1, y_shift=0) for x in X])  # alpha
 
-
 # X = np.arange(0, (2 * CYCLES) * np.pi, 0.1)
-X = np.arange(0, NUM, 2)
-# Y = (np.tan(X/d )* 0.005 + 0.1 * np.sin(X/d) + 0.1 * np.log(X + 10)) + 0.3
+# X = np.arange(0, NUM, 2)
+# Y = (np.tan(X/d) + 1.04 * np.sin(X/d) + 0.9 * np.log(X + 10)) - 0.4
+Y = (0.3 * np.sin(X/d) + 1.5*np.log((X + 10)/d) / np.log(NUM)) - 0.4
 # Y = np.sin(X/d)
-# Y = np.clip(Y, 0.0, 1.0)
+Y = np.clip(Y, 0.0, 0.8)
 
 # X = np.linspace(chi2.ppf(0.01, 55),
 #                 chi2.ppf(0.99, 55), 100)
 
-Y = chi2.pdf(X/2, 5) * 10
+# Y = chi2.pdf(X/2, 5) * 10
 
 fig, ax = plt.subplots(figsize=(10, 6))
 
 ax.plot(X, Y)
-plt.xlim([-1, 50])
+plt.xlim([-1, NUM])
 plt.ylim([-0.5, 2.5])
 plt.show()

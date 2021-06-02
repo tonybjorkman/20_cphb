@@ -20,8 +20,12 @@ class Chronicler:
 
     def init_chronicle(self):
 
+        ship_infos_name = 'ship_infos'
+        if PARAMS.MAP_SIZE == 'small':
+            ship_infos_name = 'ship_infos_small'
+
         for ship_nid in SHIPS:
-            with open('./utils/ship_infos/ship_' + ship_nid + '.json', 'r') as f:
+            with open('./utils/' + ship_infos_name + '/ship_' + ship_nid + '.json', 'r') as f:
                 ship_template = json.load(f)
 
             self.ch["ship_" + ship_nid] = ship_template

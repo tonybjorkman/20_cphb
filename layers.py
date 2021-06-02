@@ -128,13 +128,7 @@ class Ship(LayerAbstract):
                  FRAMES_START, FRAMES_STOP,
                  sail_pics, ship_info):
         """
-        :param id:
-        :param tl:
         :param pic: needed for scaling
-        :param zorder:
-        :param FRAMES_START:
-        :param FRAMES_STOP:
-        :param scale_vector:
         :param expl_offset: position relative to tl of ship
         """
         super().__init__(id, zorder, tl, pic, scale_vector)
@@ -147,9 +141,10 @@ class Ship(LayerAbstract):
         self.smoke_r_f = None
         self.extent = np.zeros(shape=(total_frames, 4), dtype=int)
 
-        super().gen_extent(total_frames, mov_x=0.05, mov_y=0.03)
+        super().gen_extent(total_frames, mov_x=ship_info['move_vector'][0], mov_y=ship_info['move_vector'][1])
         self.expl_offset_ratio = gen_offset_ratio(pic, ship_info['explosion_offset'])
         self.explosion_occupied = False  # needed to prevent removing it in animation
+        self.extent_explosion = None
         self.extent_clock = 0
 
         # SAILS =====
@@ -161,9 +156,7 @@ class Ship(LayerAbstract):
             self.sails[sail_id] = Sail(id=sail_id, tl=tl, pic=sail_pics[sail_id], zorder=zorder, scale_vector=scale_vector,
                                        sail_offset_ratio=sail_offset_ratio)
 
-        hh = 5
-
-    def get_extent_explosion(self):
+    def update_extent_explosion(self):
         ship_extent = self.extent[self.extent_clock]
         width_ship = (ship_extent[1] - ship_extent[0]) * (1 - random.uniform(0.0, 0.3))
         height_ship = (ship_extent[2] - ship_extent[3]) * (1 - random.uniform(0.0, 0.1))
@@ -172,7 +165,7 @@ class Ship(LayerAbstract):
         scale_factor = self.scale_vector[self.extent[self.extent_clock, 2]]
         width = EXPLOSION_WIDTH * scale_factor
         height = EXPLOSION_HEIGHT * scale_factor
-        return [expl_tl_x, expl_tl_x + width, expl_tl_y + height, expl_tl_y]
+        self.extent_explosion = [expl_tl_x, expl_tl_x + width, expl_tl_y + height, expl_tl_y]
 
     def get_tl_smoka(self):
         """
@@ -207,11 +200,21 @@ class Sail(LayerAbstract):
         super().__init__(id, zorder, tl, pic, scale_vector)
         # self.sail_frames = SAIL_FRAMES
         self.offset_ratio = sail_offset_ratio  # relative to ship
-        X = np.arange(0, SAIL_CYCLES * np.pi, 0.1)
-        self.alpha_array = np.sin(X) / 2 + 0.5
-        self.scale_array = np.sin(X) / 12 + 1
+        X = np.arange(0, PARAMS.SAIL_CYCLES * PARAMS.SAIL_STEPS_P_CYCLE)
+        cycles_currently = PARAMS.SAIL_STEPS_P_CYCLE * PARAMS.SAIL_CYCLES / (2 * np.pi)
+        d = cycles_currently / PARAMS.SAIL_CYCLES  # to achieve sought number of cycles
+        self.alpha_array = np.sin(X/d) / 2 + 0.5
+        self.alpha_array[0] = 0.0
+        self.scale_array = np.sin(X/d) / 48 + 1
         self.sail_clock = 0
         # self.extent_mov = deepcopy(self.extent)
+
+    def update_sail_clock(self):
+        if self.sail_clock == len(self.alpha_array) - 1:
+            self.sail_clock = 0
+            self.occupied = False
+        else:
+            self.sail_clock += 1
 
 
 class Splash(LayerAbstract):
@@ -222,7 +225,7 @@ class Splash(LayerAbstract):
         X = np.arange(0, PARAMS.SPLASH_STEPS_P_CYCLE)
         self.alpha_array = np.array([sigmoid(x, grad_magn_inv=-PARAMS.SPLASH_STEPS_P_CYCLE / 25, x_shift=-10,
                                              y_magn=1, y_shift=0) for x in X])
-
+        self.alpha_array[0] = 0.
         self.scale_vector_s = chi2.pdf(X / 2, PARAMS.SPLASH_STEPS_P_CYCLE // 10) * 6  # obs starts at fire frame
         # self.scale_vector_s = np.array([np.log(x) / np.log(self.smoke_frames) for x in X])
         self.spl_clock = 0

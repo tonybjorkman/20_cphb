@@ -7,7 +7,7 @@
   "smoka_id": "smoka_1",
   "smoka_offset": [60, 140],
   "smoka_init_frames": [12],
-  "sail_init_frames": [5, 8, 10],
+  "sail_init_frames": [5, 40, 60],
   "sails": {
     "sail_1_0": {"offset": [25, 74]},
     "sail_1_1": {"offset": [57, 83]},

@@ -18,14 +18,16 @@ ANIMATE_SMOKA = 1
 ANIMATE_SAILS = 1
 ANIMATE_EXPLOSIONS = 1
 ANIMATE_SPL = 1
+ANIMATE_BC = 1  # backround class
+bc_clock = 0  # since bc does not have a class
 
 chronicler.Chronicler()
 
 Writer = animation.writers['ffmpeg']
 writer = Writer(fps=FPS, metadata=dict(artist='Me'), bitrate=3600)  # 20, 3600, codec="libx264", extra_args=["-preset", "veryslow","-crf","0"]
 
-fig, ax = plt.subplots(figsize=(20, 12))
-# fig, ax = plt.subplots(figsize=(10, 6))
+# fig, ax = plt.subplots(figsize=(20, 12))
+fig, ax = plt.subplots(figsize=(10, 6))
 
 # plt.axis([0, 1280, 0, 720])
 # plt.gca().invert_yaxis()
@@ -44,17 +46,31 @@ smokes_occupied = []
 
 def animate(i):
 
-    # global explosion_occupied
-    if i % 10 == 0:
-        print(i)
+    def find_free_obj(type, bc=False):
+        _di = None
+        if type == 'expls':
+            _di = expls
+        elif type == 'smokrs':
+            _di = smokrs
+        elif type == 'smokas':
+            _di = smokas
+        elif type == 'spls':
+            _di = spls
 
-    # WAVES ===============
-    if ANIMATE_WAVES:
-        for wave_id, wave in waves.items():
-            wave_ax = im_ax[wave_id]
-            wave_ax.set_alpha(wave.alpha_array[wave.wave_clock % len(wave.alpha_array)])
-            wave_ax.set_extent(wave.extent[wave.wave_clock % len(wave.alpha_array)])
-            wave.set_wave_clock()
+        obj = None
+        for _ in range(5):  # ONLY FIVE ATTEMPTS
+            id = random.choice(list(_di))
+            if bc == True and _di[id].occupied == False:  # all items accepted
+                obj = _di[id]
+                break
+            elif bc == False and _di[id].occupied == False and _di[id].bc == False:  # only non-bc's accepted
+                obj = _di[id]
+                break
+        return obj
+
+    global bc_clock
+    # if i % 10 == 0:
+    #     print(i)
 
     # SHIP  ======
     for ship_id, ship in ships.items():
@@ -62,49 +78,43 @@ def animate(i):
         ship_ax.set_extent(ship.extent[ship.extent_clock])  # obs tl not updated for ship
         ship.extent_clock += 1
 
-        if i in ship.firing_init_frames:
-            flag_found_free_expl = False
-            expl_id = None
-            expl = None
-            for _ in range(5):  # ONLY FIVE ATTEMPTS
-                expl_id = random.choice(list(expls))
-                expl = expls[expl_id]
-                if expl.occupied == False:
-                    flag_found_free_expl = True
-                    break
+        if ship.firing_init_frames[ship.expl_clock] == i:
+            if len(ship.firing_init_frames) - 1 > ship.expl_clock:
+                ship.expl_clock += 1
 
-            if flag_found_free_expl == True:
-                # expl.extent = ship.get_extent_explosion()
+            expl = find_free_obj(type='expls')
+            if expl is not None:
                 ship.update_extent_explosion()
                 expl.extent = ship.extent_explosion
                 expl.occupied = True
 
-            for smokr_id, smokr in smokrs.items():  # find smoke_r_f
-                if smokr.occupied == False:
-                    smokr.occupied = True
-                    if ship.extent_explosion is None:  #
-                        ship.update_extent_explosion()
-                    expl_extent = ship.extent_explosion
-                    smokr.tl = [expl_extent[0], expl_extent[2]]
-                    break
+            smokr = find_free_obj(type='smokrs')
+            if smokr is not None:
+                smokr.occupied = True
+                if ship.extent_explosion is None:  #
+                    ship.update_extent_explosion()
+                expl_extent = ship.extent_explosion
+                smokr.tl = [expl_extent[0], expl_extent[2]]
 
-            for spl_id, spl in spls.items():
-                if spl.occupied == False:
-                    spl.occupied = True
-                    if ship.extent_explosion is None:
-                        ship.update_extent_explosion()
-                    expl_extent = ship.extent_explosion
-                    spl.tl = [expl_extent[0] + 50, expl_extent[2] - 20]
-                    # spl.tl = [20, 100]
-                    break
+            spl = find_free_obj(type='spls')
+            if spl is not None:
+                spl.occupied = True
+                if ship.extent_explosion is None:
+                    ship.update_extent_explosion()
+                expl_extent = ship.extent_explosion
+                spl.tl = [expl_extent[0] + 50, expl_extent[2] - 20]
 
-        if i in ship.smoka_init_frames:
+        if ship.smoka_init_frames[ship.smoka_init_clock] == i:
+            if len(ship.smoka_init_frames) - 1 > ship.smoka_init_clock:
+                ship.smoka_init_clock += 1
             smoka = smokas[ship.smoka_id]
             if smoka.occupied == False:
                 smoka.occupied = True
                 smoka.tl = ship.get_tl_smoka()
 
-        if i in ship.sail_init_frames:
+        if ship.sail_init_frames[ship.sail_init_clock] == i:
+            if len(ship.sail_init_frames) - 1 > ship.sail_init_clock:
+                ship.sail_init_clock += 1
             for sail_id, sail in ship.sails.items():
                 if sail.occupied == False:
                     sail.occupied = True
@@ -119,6 +129,29 @@ def animate(i):
                     sail_ax.set_alpha(ship.sails[sail_id].alpha_array[ship.sails[sail_id].sail_clock % len(ship.sails[sail_id].alpha_array)])  # just scalar
                     # ship.sails[sail_id].sail_clock += 1  # todo change to sail.sail_clock which stops
                     ship.sails[sail_id].update_sail_clock()
+
+    if ANIMATE_BC:
+        if chronicle['bc'][bc_clock]['frame'] == i:
+            expl = find_free_obj(type='expls')
+            if expl is not None:
+                expl.occupied = True
+                expl.tl = chronicle['bc'][bc_clock]['tl']
+                scale_factor = expl.scale_vector[expl.tl[1]]
+                width = PARAMS.EXPLOSION_WIDTH * scale_factor
+                height = PARAMS.EXPLOSION_HEIGHT * scale_factor
+                expl.extent = [expl.tl[0], expl.tl[0] + width, expl.tl[1], expl.tl[1] + height]
+            smokr = find_free_obj(type='smokrs', bc=True)
+            if smokr is not None:
+                smokr.occupied = True
+                smokr.tl = chronicle['bc'][bc_clock]['tl']
+
+            smoka = find_free_obj(type='smokas')
+            if smoka is not None:
+                smoka.occupied = True
+                smoka.tl = chronicle['bc'][bc_clock]['tl']
+
+            if len(chronicle['bc']) - 1 > bc_clock:
+                bc_clock += 1
 
     if ANIMATE_EXPLOSIONS:
         for expl_id, expl in expls.items():
@@ -158,6 +191,15 @@ def animate(i):
                 spl_ax = im_ax[spl_id]
                 spl_ax.set_extent(spl.extent_mov)
                 spl_ax.set_alpha(spl.alpha_array[spl.spl_clock])
+
+    if ANIMATE_WAVES:
+        for wave_id, wave in waves.items():
+            wave_ax = im_ax[wave_id]
+            wave_ax.set_alpha(wave.alpha_array[wave.wave_clock % len(wave.alpha_array)])
+            wave_ax.set_extent(wave.extent[wave.wave_clock % len(wave.alpha_array)])
+            wave.set_wave_clock()
+
+
     return im_ax,
 
 sec_vid = ((FRAMES_STOP - FRAMES_START) / FPS)

@@ -13,16 +13,18 @@ SMOKA_FRAMES = PARAMS.SMOKA_FRAMES
 SAIL_CYCLES = PARAMS.SAIL_CYCLES
 
 class LayerAbstract:
-    def __init__(self, id, zorder, tl, pic, scale_vector, left_right=None):
+    def __init__(self, id, zorder, tl, pic, scale_vector, left_right=None, bc=False):
         self.id = id
         self.zorder = zorder
         self.tl = tl
+        self.bc = bc  # background class (for less detailed smokes)
         self.pic = pic
         self.scale_vector = scale_vector
         self.occupied = False
         if pic is not None:
             self.extent = [0, self.pic.shape[1], self.pic.shape[0], 0]
         self.left_right = left_right  # which direction the layer is moving
+        # self.init_clock = 0  # each obj gets a default init clock, for whatever needs to be inited
 
     def gen_extent(self, num_frames, mov_x, mov_y):
         """
@@ -55,8 +57,8 @@ class LayerAbstract:
 
 
 class Smoke(LayerAbstract):
-    def __init__(self, id, zorder, tl, pic, scale_vector, s_type, left_right):
-        super().__init__(id, zorder, tl, pic, scale_vector, left_right)
+    def __init__(self, id, zorder, tl, pic, scale_vector, s_type, left_right, bc):
+        super().__init__(id, zorder, tl, pic, scale_vector, left_right, bc)
         self.smoke_frames = None
         self.s_type = s_type
         if s_type == 'r':
@@ -89,7 +91,7 @@ class Smoke(LayerAbstract):
                 self.extent_mov = [self.tl[0], self.tl[0] + width,
                                    self.tl[1] + 1 * height / 6, self.tl[1] - 5 * height / 6]
             elif self.left_right == 'l':
-                self.extent_mov = [self.tl[0] - width, self.tl[0],
+                self.extent_mov = [self.tl[0], self.tl[0] - width,  # flipped horizontally
                                    self.tl[1] + 2 * height / 6, self.tl[1] - 3 * height / 6]
 
     def set_clock_smoke(self):
@@ -146,6 +148,9 @@ class Ship(LayerAbstract):
         self.explosion_occupied = False  # needed to prevent removing it in animation
         self.extent_explosion = None
         self.extent_clock = 0
+        self.expl_clock = 0
+        self.smoka_init_clock = 0
+        self.sail_init_clock = 0
 
         # SAILS =====
         self.sails = {}

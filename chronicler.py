@@ -1,6 +1,7 @@
 import json
 import random
 import uuid
+from copy import deepcopy
 
 import PARAMS
 
@@ -20,6 +21,11 @@ class Chronicler:
 
     def init_chronicle(self):
 
+        self.ch['ships'] = {}
+        self.ch['bc'] = []
+        with open('./utils/bc_template.json', 'r') as f:
+            self.bc_template = json.load(f)
+
         ship_infos_name = 'ship_infos'
         if PARAMS.MAP_SIZE == 'small':
             ship_infos_name = 'ship_infos_small'
@@ -28,13 +34,13 @@ class Chronicler:
             with open('./utils/' + ship_infos_name + '/ship_' + ship_nid + '.json', 'r') as f:
                 ship_template = json.load(f)
 
-            self.ch["ship_" + ship_nid] = ship_template
+            self.ch['ships']["ship_" + ship_nid] = ship_template
 
     def run(self):
 
         for frame in range(PARAMS.FRAMES_START, PARAMS.FRAMES_STOP + 1):
 
-            for ship_id, ship in self.ch.items():
+            for ship_id, ship in self.ch['ships'].items():
                 _r = random.random()
                 if frame > 1 and _r < 0.2:  # firing prob
                     if _r < 0.1 and ship_id == 'ship_1':
@@ -43,6 +49,16 @@ class Chronicler:
                     elif ship_id == 'ship_3':
                         ship['firing_frames'].append(frame)
                         ship['splash_init_frames'].append(frame)
+
+            # Background Class BC (battle cruiser)
+            _r = random.random()
+            if _r < 0.1:
+                bc = deepcopy(self.bc_template)
+                bc['frame'] = frame
+                bc['tl'] = [409, 114]
+                bc['left_right'] = 'l'
+                self.ch['bc'].append(bc)
+
 
     def export(self):
 

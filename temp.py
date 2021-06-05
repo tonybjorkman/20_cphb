@@ -1,49 +1,49 @@
 import numpy as np
-import time
-import random
-
-# # exercise 1
-# my_set = {}
-# my_list = []
-#
-# for i in range(100000):
-#     my_set[str(i)] = {"my_val": str(i), "my_val2": random.randint(0, 60000)}
-#     my_list.append({"my_val": str(i), "my_val2": random.randint(0, 60000)})
-#
-# time0 = time.time()
-# for i in range(10000):
-#     search_key = str(random.randint(0, 99999))
-#     retrieved = my_set[search_key]
-# print("final time: " + str(time.time() - time0))
-#
-# time0 = time.time()
-# for i in range(10000):
-#     retrieved = my_list.pop()
-#     my_list.insert(0, retrieved)
-# print("final time2: " + str(time.time() - time0))
+import matplotlib.pyplot as plt
+import matplotlib.transforms as mtransforms
 
 
-# Exercise 2
-my_list = list(range(0, 99999))
+def get_image():
+    delta = 0.25
+    x = y = np.arange(-3.0, 3.0, delta)
+    X, Y = np.meshgrid(x, y)
+    Z1 = np.exp(-X**2 - Y**2)
+    Z2 = np.exp(-(X - 1)**2 - (Y - 1)**2)
+    Z = (Z1 - Z2)
+    return Z
 
-targets = []
-for i in range(100):
-    targets.append(random.randint(0, 99999))
-targets = sorted(targets, reverse=False)
 
-time0 = time.time()
-for i in range(0, 9999):
-    if i in targets:
-        aa = 5
-        # print("yes")
-print("final time: " + str(time.time() - time0))
+def do_plot(ax, Z, transform):
+    im = ax.imshow(Z, interpolation='none',
+                   origin='lower',
+                   extent=[-2, 4, -3, 2], clip_on=True)
 
-time0 = time.time()
-index_holder = 0
-for i in range(0, 9999):
-    if targets[index_holder] == i:
-        if len(targets) - 1 > index_holder:
-            # print("yes")
-            index_holder += 1
+    trans_data = transform + ax.transData
+    im.set_transform(trans_data)
 
-print("final time2: " + str(time.time() - time0))
+    # display intended extent of the image
+    x1, x2, y1, y2 = im.get_extent()
+    ax.plot([x1, x2, x2, x1, x1], [y1, y1, y2, y2, y1], "y--",
+            transform=trans_data)
+    ax.set_xlim(-5, 5)
+    ax.set_ylim(-4, 4)
+
+
+# prepare image and figure
+fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
+Z = get_image()
+
+# image rotation
+do_plot(ax1, Z, mtransforms.Affine2D().rotate_deg(30))
+
+# image skew
+do_plot(ax2, Z, mtransforms.Affine2D().skew_deg(30, 15))
+
+# scale and reflection
+do_plot(ax3, Z, mtransforms.Affine2D().scale(-1, .5))
+
+# everything and a translation
+do_plot(ax4, Z, mtransforms.Affine2D().
+        rotate_deg(30).skew_deg(30, 15).scale(-1, .5).translate(.5, -1))
+
+plt.show()

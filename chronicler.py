@@ -2,6 +2,7 @@ import json
 import random
 import uuid
 from copy import deepcopy
+from utils.several import get_possible_bc_locs
 
 import PARAMS
 
@@ -16,8 +17,10 @@ class Chronicler:
     def __init__(self):
         self.ch = {}
         self.init_chronicle()
+        self.possible_bc_locs = get_possible_bc_locs(PARAMS.MAP_SIZE)
         self.run()
         self.export()
+
 
     def init_chronicle(self):
 
@@ -55,9 +58,11 @@ class Chronicler:
             if _r < 0.1:
                 bc = deepcopy(self.bc_template)
                 bc['frame'] = frame
-                bc['tl'] = [409, 114]
+                bc['tl'] = random.choice(self.possible_bc_locs)
                 bc['left_right'] = 'l'
                 self.ch['bc'].append(bc)
+
+        aa = 66
 
 
     def export(self):

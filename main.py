@@ -1,3 +1,5 @@
+# geometric image transformations.
+
 import numpy as np
 import random
 import time
@@ -8,17 +10,19 @@ import matplotlib.animation as animation
 import gen_layers
 import chronicler
 import PARAMS
+import os
+import matplotlib.transforms as mtransforms
 
 FPS = 20
 FRAMES_START = PARAMS.FRAMES_START
 FRAMES_STOP = PARAMS.FRAMES_STOP
-ANIMATE_WAVES = 1  # ONLY HANDLED FOR LARGE MAP FROM NOW ON
-ANIMATE_SMOKR = 1
-ANIMATE_SMOKA = 1
-ANIMATE_SAILS = 1
-ANIMATE_EXPLOSIONS = 1
-ANIMATE_SPL = 1
-ANIMATE_BC = 1  # backround class
+ANIMATE_WAVES = 0  # ONLY HANDLED FOR LARGE MAP FROM NOW ON
+ANIMATE_SMOKR = 0
+ANIMATE_SMOKA = 0
+ANIMATE_SAILS = 0
+ANIMATE_EXPLOSIONS = 0
+ANIMATE_SPL = 0
+ANIMATE_BC = 0  # backround class
 bc_clock = 0  # since bc does not have a class
 
 chronicler.Chronicler()
@@ -29,6 +33,7 @@ writer = Writer(fps=FPS, metadata=dict(artist='Me'), bitrate=3600)  # 20, 3600, 
 # fig, ax = plt.subplots(figsize=(20, 12))
 fig, ax = plt.subplots(figsize=(10, 6))
 
+# TEMP
 # plt.axis([0, 1280, 0, 720])
 # plt.gca().invert_yaxis()
 # ax.axis('off')
@@ -69,8 +74,8 @@ def animate(i):
         return obj
 
     global bc_clock
-    # if i % 10 == 0:
-    #     print(i)
+    if i % 10 == 0:
+        print(i)
 
     # SHIP  ======
     for ship_id, ship in ships.items():
@@ -127,7 +132,6 @@ def animate(i):
                     sail_ax = im_ax[sail_id]
                     sail_ax.set_extent(ext)
                     sail_ax.set_alpha(ship.sails[sail_id].alpha_array[ship.sails[sail_id].sail_clock % len(ship.sails[sail_id].alpha_array)])  # just scalar
-                    # ship.sails[sail_id].sail_clock += 1  # todo change to sail.sail_clock which stops
                     ship.sails[sail_id].update_sail_clock()
 
     if ANIMATE_BC:
@@ -140,9 +144,11 @@ def animate(i):
                 width = PARAMS.EXPLOSION_WIDTH * scale_factor
                 height = PARAMS.EXPLOSION_HEIGHT * scale_factor
                 expl.extent = [expl.tl[0], expl.tl[0] + width, expl.tl[1], expl.tl[1] + height]
+
             smokr = find_free_obj(type='smokrs', bc=True)
             if smokr is not None:
                 smokr.occupied = True
+                smokr.bc_cur = True
                 smokr.tl = chronicle['bc'][bc_clock]['tl']
 
             smoka = find_free_obj(type='smokas')
@@ -165,7 +171,11 @@ def animate(i):
     if ANIMATE_SMOKR:
         for smokr_id, smokr in smokrs.items():  # move smokas occupied inside gen_layers (or use padding and loop through all)
             if smokr.occupied == True:
-                smokr.set_extent_smoke()
+                if smokr.bc_cur == True:
+                    left_right = 'l'
+                else:
+                    left_right = 'r'
+                smokr.set_extent_smoke(left_right=left_right)
                 smokr.set_clock_smoke()
 
                 smoke_ax = im_ax[smokr_id]
@@ -175,7 +185,7 @@ def animate(i):
     if ANIMATE_SMOKA:
         for smoke_id, smoka in smokas.items():
             if smoka.occupied == True:
-                smoka.set_extent_smoke()
+                smoka.set_extent_smoke(left_right='r')
                 smoka.set_clock_smoke()
 
                 smoke_ax = im_ax[smoke_id]
@@ -199,18 +209,17 @@ def animate(i):
             wave_ax.set_extent(wave.extent[wave.wave_clock % len(wave.alpha_array)])
             wave.set_wave_clock()
 
-
     return im_ax,
 
 sec_vid = ((FRAMES_STOP - FRAMES_START) / FPS)
 min_vid = ((FRAMES_STOP - FRAMES_START) / FPS) / 60
 print("len of vid: " + str(sec_vid) + " s" + "    " + str(min_vid) + " min")
 
-WRITE = 0  # change IMMEDIATELY after set
+WRITE = 1  # change IMMEDIATELY after set
 start_t = time.time()
 ani = animation.FuncAnimation(fig, animate, frames=range(FRAMES_START, FRAMES_STOP), interval=1, repeat=False)  # interval only affects live ani
 
-if WRITE == 0:
+if WRITE == 0:  # NOT HERE
     plt.show()
 else:
     ani.save('./vid_81.mp4', writer=writer)

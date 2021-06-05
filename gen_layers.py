@@ -59,16 +59,14 @@ def gen_layers(ax, FRAMES_START, FRAMES_STOP, chronicle):
         im_ax[spl_id] = ax.imshow(spl_pic, zorder=zorder, alpha=0., extent=[0, 1, 1, 0])
 
     # SMOKRS ====================
-    zorder = 99  # 5
+    zorder = 5  # 5
     for smokr_id, smokr_pic in pics['smokrs'].items():
-
         bc = False
         if smokr_id.split("_")[1] == 'bc':
             bc = True
         smokrs[smokr_id] = layers.Smoke(id=smokr_id, zorder=zorder, tl=None, pic=pics['smokrs'][smokr_id],
-                                  scale_vector=scale_vector, s_type='r', left_right='r', bc=bc)
+                                  scale_vector=scale_vector, s_type='r', left_right=None, bc=bc)  # set inside
         im_ax[smokr_id] = ax.imshow(pics['smokrs'][smokr_id], zorder=zorder, alpha=0., extent=[0, 1, 1, 0])
-
 
     # SMOKAS ========
     zorder = 4

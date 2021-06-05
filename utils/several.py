@@ -25,3 +25,10 @@ def sigmoid(x, grad_magn_inv=None, x_shift=None, y_magn=None, y_shift=None):
     the rightmost one dictates y: 0.1=10, 0.05=20, 0.01=100, 0.005=200
     """
     return (1 / (math.exp(-x / grad_magn_inv + x_shift) + y_magn)) + y_shift  # finfin
+
+def get_possible_bc_locs(map_size):
+    if map_size == 'small':
+        li = [[405, 83], [288, 35], [49, 134]]
+    else:
+        li = [[1148, 466], [1168, 467], [1034, 456], [1015, 456]]
+    return li

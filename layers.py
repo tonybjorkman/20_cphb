@@ -18,6 +18,7 @@ class LayerAbstract:
         self.zorder = zorder
         self.tl = tl
         self.bc = bc  # background class (for less detailed smokes)
+        self.bc_cur = False
         self.pic = pic
         self.scale_vector = scale_vector
         self.occupied = False
@@ -65,6 +66,11 @@ class Smoke(LayerAbstract):
             self.smoke_frames = SMOKE_R_F_FRAMES
         elif s_type == 'a':
             self.smoke_frames = SMOKA_FRAMES
+        if bc == True:
+            self.left_right = 'l'
+        else:
+            self.left_right = 'r'
+        self.bc_cur = bc
         self.extent_mov = deepcopy(self.extent)
         X = np.arange(0, self.smoke_frames)
         self.alpha_array = np.array([sigmoid(x, grad_magn_inv=-self.smoke_frames/25, x_shift=-10,
@@ -75,22 +81,23 @@ class Smoke(LayerAbstract):
         self.scale_vector_s = np.array([np.log(x) / np.log(self.smoke_frames) for x in X])
         # self.scale_vector = np.linspace(0.2, 1, SMOKE_R_F_FRAMES)
 
-    def set_extent_smoke(self):
+    def set_extent_smoke(self, left_right=None):
         scale_factor = self.scale_vector_s[self.smoke_clock] * self.scale_vector[int(self.tl[1])]
         width = self.extent[1] * scale_factor
         height = self.extent[2] * scale_factor
+
         if self.s_type == 'a':
-            if self.left_right == 'r':
+            if left_right == 'r':
                 self.extent_mov = [self.tl[0], self.tl[0] + width,
                                    self.tl[1] + 2 * height / 6, self.tl[1] - 4 * height / 6]  # prevent it to go far down
-            elif self.left_right == 'l':  # still use tl but rename to tr
+            elif left_right == 'l':  # still use tl but rename to tr
                 self.extent_mov = [self.tl[0] - width, self.tl[0], self.tl[1] + 1 * height / 6,
                                    self.tl[1] - 5 * height / 6]  # prevent it to go far down
         elif self.s_type == 'r':
-            if self.left_right == 'r':
+            if left_right == 'r':
                 self.extent_mov = [self.tl[0], self.tl[0] + width,
                                    self.tl[1] + 1 * height / 6, self.tl[1] - 5 * height / 6]
-            elif self.left_right == 'l':
+            elif left_right == 'l':
                 self.extent_mov = [self.tl[0], self.tl[0] - width,  # flipped horizontally
                                    self.tl[1] + 2 * height / 6, self.tl[1] - 3 * height / 6]
 
@@ -99,6 +106,7 @@ class Smoke(LayerAbstract):
             self.occupied = False
             self.extent_mov = deepcopy(self.extent)
             self.smoke_clock = 0
+            self.bc_cur = False
         else:
             self.smoke_clock += 1
 

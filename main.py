@@ -13,14 +13,15 @@ import PARAMS
 import os
 import matplotlib.transforms as mtransforms
 
+WRITE = 0  # change IMMEDIATELY back to zero (it immediately kills old file when re-run)
 FPS = 20
 FRAMES_START = PARAMS.FRAMES_START
 FRAMES_STOP = PARAMS.FRAMES_STOP
-ANIMATE_WAVES = 0  # ONLY HANDLED FOR LARGE MAP FROM NOW ON
-ANIMATE_SMOKR = 0
-ANIMATE_SMOKA = 0
+ANIMATE_WAVES = 1  # ONLY HANDLED FOR LARGE MAP FROM NOW ON
+ANIMATE_SMOKR = 1
+ANIMATE_SMOKA = 1
 ANIMATE_SAILS = 0
-ANIMATE_EXPLOSIONS = 0
+ANIMATE_EXPLOSIONS = 1
 ANIMATE_SPL = 0
 ANIMATE_BC = 0  # backround class
 bc_clock = 0  # since bc does not have a class
@@ -73,7 +74,7 @@ def animate(i):
                 break
         return obj
 
-    global bc_clock
+
     if i % 10 == 0:
         print(i)
 
@@ -135,6 +136,7 @@ def animate(i):
                     ship.sails[sail_id].update_sail_clock()
 
     if ANIMATE_BC:
+        global bc_clock
         if chronicle['bc'][bc_clock]['frame'] == i:
             expl = find_free_obj(type='expls')
             if expl is not None:
@@ -207,7 +209,7 @@ def animate(i):
             wave_ax = im_ax[wave_id]
             wave_ax.set_alpha(wave.alpha_array[wave.wave_clock % len(wave.alpha_array)])
             wave_ax.set_extent(wave.extent[wave.wave_clock % len(wave.alpha_array)])
-            wave.set_wave_clock()
+            wave.set_clock_wave()
 
     return im_ax,
 
@@ -215,7 +217,7 @@ sec_vid = ((FRAMES_STOP - FRAMES_START) / FPS)
 min_vid = ((FRAMES_STOP - FRAMES_START) / FPS) / 60
 print("len of vid: " + str(sec_vid) + " s" + "    " + str(min_vid) + " min")
 
-WRITE = 0  # change IMMEDIATELY after set
+
 start_t = time.time()
 ani = animation.FuncAnimation(fig, animate, frames=range(FRAMES_START, FRAMES_STOP), interval=1, repeat=False)  # interval only affects live ani
 

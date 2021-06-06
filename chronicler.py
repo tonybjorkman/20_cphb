@@ -11,6 +11,7 @@ OVERWRITE = 1
 
 class Chronicler:
     """
+    Class that says when explosions, splashes and smokes are triggered.
     Smokas are set only when big map is attempted.
     """
 

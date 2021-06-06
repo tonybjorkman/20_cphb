@@ -125,7 +125,7 @@ class Wave(LayerAbstract):
         self.extent = np.zeros(shape=(len(X), 4), dtype=int)
         super().gen_extent(len(X), mov_x=0.05, mov_y=0.04)
 
-    def set_wave_clock(self):
+    def set_clock_wave(self):
 
         if self.wave_clock == len(self.alpha_array) - 1:
             self.wave_clock = 0

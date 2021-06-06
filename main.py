@@ -36,7 +36,7 @@ fig, ax = plt.subplots(figsize=(10, 6))
 # TEMP
 # plt.axis([0, 1280, 0, 720])
 # plt.gca().invert_yaxis()
-# ax.axis('off')
+ax.axis('off')
 # plt.gca().set_position([0, 0, 1, 1])  # FILLS WHOLE FIG
 
 with open('./utils/chronicle.json', 'r') as f:
@@ -215,7 +215,7 @@ sec_vid = ((FRAMES_STOP - FRAMES_START) / FPS)
 min_vid = ((FRAMES_STOP - FRAMES_START) / FPS) / 60
 print("len of vid: " + str(sec_vid) + " s" + "    " + str(min_vid) + " min")
 
-WRITE = 1  # change IMMEDIATELY after set
+WRITE = 0  # change IMMEDIATELY after set
 start_t = time.time()
 ani = animation.FuncAnimation(fig, animate, frames=range(FRAMES_START, FRAMES_STOP), interval=1, repeat=False)  # interval only affects live ani
 

@@ -12,9 +12,9 @@ def load_pics():
     pics['smokrs'] = {}
     pics['expls'] = {}
     if PARAMS.MAP_SIZE == 'small':
-        pics['backgr'] = imread('./images_mut/backgr_small1.png')  # 482, 187
+        pics['backgr'] = imread('./images_raw/backgr_small1.png')  # 482, 187
     else:
-        pics['backgr'] = imread('./images_mut/backgr_new1.png')  # 482, 187
+        pics['backgr'] = imread('./images_raw/backgr_new1.png')  # 482, 187
     PATH = './images_mut/waves/'
     _, _, file_names = os.walk(PATH).__next__()
     for i in range(PARAMS.NUM_WAVES):
